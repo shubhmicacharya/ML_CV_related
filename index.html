@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Recommender with Jarvis Assistant</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Music Recommender Section -->
+      <h1>Music Recommender</h1>
+      <input
+        type="text"
+        id="search-bar"
+        placeholder="Search for a song or artist..."
+      />
+      <ul id="suggestions"></ul>
+
+      <!-- Button to show the login form -->
+      <button id="login-btn">Login</button>
+
+      <!-- Login Section (Initially hidden) -->
+      <div class="login-container" id="login-container" style="display: none">
+        <h5>Login</h5>
+        <form id="login-form" onsubmit="return handleLogin(event)">
+          <input type="text" id="username" placeholder="Username" required />
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            required
+          />
+          <input type="text" id="email-id" placeholder="Email ID" required />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <!-- Profile Button -->
+      <button id="profile-button" onclick="showProfile()">
+        Go to My Profile
+      </button>
+
+      <!-- Profile Section (Initially hidden) -->
+      <div id="profile-section" style="display: none">
+        <h2>Your Profile</h2>
+        <div id="profile-details">
+          <img
+            id="profile-pic"
+            src="/static/default-profile.png"
+            alt="Profile Picture"
+          />
+          <div id="profile-info">
+            <h3 id="profile-name">John Doe</h3>
+            <p id="profile-bio">
+              Music lover | Enjoying beats from all over the world!
+            </p>
+            <p id="profile-email">Email: johndoe@example.com</p>
+          </div>
+        </div>
+        <button onclick="hideProfile()">Close Profile</button>
+      </div>
+
+      <!-- Assistant Section -->
+      <div id="assistant-container">
+        <h2>AI Assistant</h2>
+        <p>Say "Jarvis" to wake up the assistant or click the logo below.</p>
+        <img
+          src="/static/jarvis_logo.png"
+          alt="Assistant Logo"
+          id="assistant-logo"
+          onclick="openChat()"
+        />
+      </div>
+
+      <div class="song-container">
+        <div class="song-box">
+          <h3>Global Top Songs</h3>
+          <a
+            href="https://charts.youtube.com/charts/TopSongs/global/weekly"
+            target="blank"
+          >
+            <button>YouTube</button>
+          </a>
+          <a
+            href="https://open.spotify.com/playlist/37i9dQZEVXbNG2KDcFcKOF"
+            target="blank"
+          >
+            <button>Spotify</button>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="chat-container" style="display: none">
+      <button id="close-chat-button" onclick="closeChat()">X</button>
+      <div id="chat-box">
+        <!-- Messages will appear here -->
+      </div>
+      <div id="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="speak-button">🎤</button>
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+
+    <script>
+      // Music Recommender Logic
+      const searchBar = document.getElementById("search-bar");
+      const suggestionsList = document.getElementById("suggestions");
+
+      // Toggle login form visibility
+      document
+        .getElementById("login-btn")
+        .addEventListener("click", function () {
+          const loginContainer = document.getElementById("login-container");
+          if (
+            loginContainer.style.display === "none" ||
+            loginContainer.style.display === ""
+          ) {
+            loginContainer.style.display = "block";
+          } else {
+            loginContainer.style.display = "none";
+          }
+        });
+
+      // Handle login form submission
+      function handleLogin(event) {
+        event.preventDefault(); // Prevent form from submitting
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const email = document.getElementById("email-id").value;
+
+        // Displaying the profile section and updating it with the login details
+        document.getElementById("profile-name").textContent = username;
+        document.getElementById(
+          "profile-email"
+        ).textContent = `Email: ${email}`;
+        document.getElementById(
+          "profile-bio"
+        ).textContent = `Welcome, ${username}!`;
+
+        // Hide the login form and show the profile section
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("profile-section").style.display = "block";
+
+        alert("Login successful!");
+      }
+
+      // Toggle profile section visibility
+      document
+        .getElementById("profile-button")
+        .addEventListener("click", function () {
+          const profileSection = document.getElementById("profile-section");
+          profileSection.style.display =
+            profileSection.style.display === "none" ||
+            profileSection.style.display === ""
+              ? "block"
+              : "none";
+        });
+
+      // Hide the profile section
+      function hideProfile() {
+        document.getElementById("profile-section").style.display = "none";
+      }
+
+      // Music search functionality (existing)
+      searchBar.addEventListener("input", () => {
+        const query = searchBar.value;
+        if (query.length > 2) {
+          suggestionsList.innerHTML = "<li>Loading...</li>";
+          fetch(`/suggest?query=${query}`)
+            .then((response) => response.json())
+            .then((data) => {
+              suggestionsList.innerHTML = "";
+              if (data.error) {
+                suggestionsList.innerHTML = "<li>No suggestions available</li>";
+              } else {
+                data.forEach((item) => {
+                  const li = document.createElement("li");
+                  li.innerHTML = `${item.name} - ${item.artist} <a href="${item.youtube_link}" target="_blank">Watch on YouTube</a>`;
+                  suggestionsList.appendChild(li);
+                });
+              }
+            })
+            .catch(() => {
+              suggestionsList.innerHTML =
+                "<li>Error fetching suggestions.</li>";
+            });
+        }
+      });
+
+      // Chat Logic
+      const chatContainer = document.getElementById("chat-container");
+      const chatBox = document.getElementById("chat-box");
+      const chatInput = document.getElementById("chat-input");
+      const sendButton = document.getElementById("send-button");
+      const speakButton = document.getElementById("speak-button");
+
+      // Add messages to chat
+      function addMessage(message, sender) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+        messageDiv.classList.add(
+          sender === "user" ? "user-message" : "jarvis-message"
+        );
+        messageDiv.textContent = message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      // Send message to server
+      sendButton.addEventListener("click", () => {
+        const userMessage = chatInput.value.trim();
+        if (userMessage) {
+          addMessage(userMessage, "user");
+          chatInput.value = "";
+          fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMessage }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              addMessage(data.response, "jarvis");
+
+              // If song recommendations are present, display them
+              if (data.songs && data.songs.length > 0) {
+                const songList = document.createElement("ul");
+                data.songs.forEach((song) => {
+                  const listItem = document.createElement("li");
+                  listItem.innerHTML = `${song.name} - ${song.artist} <a href="${song.youtube_link}" target="_blank">Watch on YouTube</a>`;
+                  songList.appendChild(listItem);
+                });
+                chatBox.appendChild(songList);
+              }
+            })
+            .catch(() => {
+              addMessage("Error fetching song recommendations.", "jarvis");
+            });
+        }
+      });
+
+      function openChat() {
+        chatContainer.style.display = "block";
+        addMessage("Hello! How can I assist you today?", "jarvis");
+      }
+
+      function closeChat() {
+        chatContainer.style.display = "none";
+      }
+
+      // Voice Recognition for Wake Word
+      const wakeWord = "jarvis";
+
+      // Speech Recognition (existing)
+      let recognition;
+      if (
+        "SpeechRecognition" in window ||
+        "webkitSpeechRecognition" in window
+      ) {
+        recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+
+        // Start listening when the user clicks the button
+        speakButton.addEventListener("click", () => {
+          recognition.start();
+        });
+
+        // Listen for the wake word "Jarvis"
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript.trim();
+          addMessage(transcript, "user");
+
+          // If the wake word "Jarvis" is detected, open the chat
+          if (transcript.toLowerCase().includes(wakeWord)) {
+            openChat();
+            recognition.stop();
+            fetchRecommendations();
+          }
+
+          fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: transcript }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              addMessage(data.response, "jarvis");
+
+              if (data.songs && data.songs.length > 0) {
+                const songList = document.createElement("ul");
+                data.songs.forEach((song) => {
+                  const listItem = document.createElement("li");
+                  listItem.innerHTML = `${song.name} - ${song.artist} <a href="${song.youtube_link}" target="_blank">Watch on YouTube</a>`;
+                  songList.appendChild(listItem);
+                });
+                chatBox.appendChild(songList);
+              }
+            })
+            .catch(() => {
+              addMessage("Error fetching recommendations.", "jarvis");
+            });
+        };
+      }
+    </script>
+  </body>
+</html>

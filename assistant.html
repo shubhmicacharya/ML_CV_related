@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis - Assistant</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div id="chat-container">
+      <button id="close-chat-button" onclick="closeChat()">X</button>
+      <div id="chat-box">
+        <!-- Messages will appear here -->
+      </div>
+      <div id="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="speak-button">🎤</button>
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+
+    <script>
+      // Function to close the chat interface
+      function closeChat() {
+        window.location.href = "/";
+      }
+
+      // Additional functionality for chat can be added here (like sending messages)
+    </script>
+  </body>
+</html>
